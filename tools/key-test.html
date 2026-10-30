@@ -1,0 +1,509 @@
+<title>Model M Key Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a putty-grey keyboard case on a desk, with a status strip above and an event log below. */
+:root {
+  --bg: #e9e7e1;
+  --case: #d4d0c6;
+  --case-edge: #b9b4a8;
+  --cap: #f3f1ea;
+  --cap-side: #c9c4b7;
+  --cap-mod: #bdb8ab;
+  --ink: #23252a;
+  --muted: #6a6b66;
+  --ok: #2f9e55;
+  --ok-cap: #c9ecd3;
+  --warn: #c7811a;
+  --warn-cap: #f6dfb4;
+  --unk: #6a5acd;
+  --panel: #f7f6f2;
+  --line: #d6d2c8;
+  --focus: #2459c9;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181a; --case: #2a2b2d; --case-edge: #3a3b3e; --cap: #45464a; --cap-side: #2c2d30; --cap-mod: #38393c;
+    --ink: #eceae4; --muted: #9c9b95; --ok: #4cc777; --ok-cap: #24563a; --warn: #f0a640; --warn-cap: #5e4316;
+    --unk: #a497ff; --panel: #212224; --line: #34353a; --focus: #7aa2ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17181a; --case: #2a2b2d; --case-edge: #3a3b3e; --cap: #45464a; --cap-side: #2c2d30; --cap-mod: #38393c;
+  --ink: #eceae4; --muted: #9c9b95; --ok: #4cc777; --ok-cap: #24563a; --warn: #f0a640; --warn-cap: #5e4316;
+  --unk: #a497ff; --panel: #212224; --line: #34353a; --focus: #7aa2ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-display);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 40px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+h1 { margin: 0; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; max-width: 62ch; line-height: 1.45; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+button {
+  font: 600 0.85rem var(--f-display); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.stat { display: flex; align-items: baseline; gap: 8px; padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.stat b { font: 600 1.25rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.dot { width: 10px; height: 10px; border-radius: 50%; align-self: center; }
+.bar { flex: 1 1 220px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; align-self: center; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s; }
+
+.focus-note {
+  display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 6px;
+  background: var(--warn-cap); color: var(--ink); border: 1px solid var(--warn); font-size: 0.92rem;
+}
+
+.case {
+  background: var(--case); border: 1px solid var(--case-edge); border-radius: 14px;
+  padding: clamp(10px, 2.2vw, 26px); box-shadow: 0 2px 0 var(--case-edge), 0 16px 40px -24px rgba(0,0,0,.4);
+  overflow-x: auto;
+}
+.board { position: relative; width: 100%; aspect-ratio: 23 / 6.5; container-type: inline-size; }
+.key {
+  position: absolute; padding: 0.22cqw;
+}
+.key .cap {
+  width: 100%; height: 100%; border-radius: 0.45cqw; background: var(--cap);
+  box-shadow: inset 0 -0.45cqw 0 var(--cap-side), 0 0.12cqw 0 var(--case-edge);
+  display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start;
+  padding: 0.45cqw 0.6cqw; font-size: 1.02cqw; line-height: 1.15; font-weight: 500; color: var(--ink);
+  white-space: pre; overflow: hidden; transition: transform .06s, background-color .15s;
+}
+.key.mod .cap { background: var(--cap-mod); }
+.key.iso-enter .cap { clip-path: polygon(0 0, 100% 0, 100% 100%, 16.67% 100%, 16.67% 50%, 0 50%); }
+.key[data-state="ok"] .cap { background: var(--ok-cap); }
+.key[data-state="chatter"] .cap { background: var(--warn-cap); box-shadow: inset 0 -0.45cqw 0 var(--warn), 0 0.12cqw 0 var(--case-edge); }
+.key.down .cap { transform: translateY(0.3cqw); box-shadow: inset 0 -0.15cqw 0 var(--cap-side); outline: 0.2cqw solid var(--ok); }
+.key .n { position: absolute; right: 0.7cqw; bottom: 0.75cqw; font: 600 0.8cqw var(--f-mono); color: var(--muted); }
+.key[data-state="chatter"] .n { color: var(--warn); }
+.badge { position: absolute; font: 600 0.75cqw var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.85rem; color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.panel h2 { margin: 0 0 10px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.last { font-family: var(--f-mono); display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 0.9rem; }
+.last dt { color: var(--muted); }
+.last dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.list { font-family: var(--f-mono); font-size: 0.85rem; line-height: 1.6; overflow-wrap: anywhere; margin: 0 0 12px; }
+.list.empty { color: var(--muted); font-family: var(--f-display); }
+.log { font-family: var(--f-mono); font-size: 0.8rem; max-height: 300px; overflow: auto; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
+.log li { display: grid; grid-template-columns: 7.5em 9em 3.5em 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.log li.chatter { color: var(--warn); }
+.log li.unknown { color: var(--unk); }
+.tips { margin: 0; padding-left: 1.2em; color: var(--muted); font-size: 0.88rem; line-height: 1.55; }
+.toast { font-size: 0.85rem; color: var(--ok); min-height: 1.2em; }
+.typing { display: flex; flex-direction: column; gap: 12px; }
+.typing-head { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: baseline; justify-content: space-between; }
+.typing-head h2 { margin: 0; }
+.typing-stats { display: flex; flex-wrap: wrap; gap: 16px; font: 0.85rem var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.typing-stats b { color: var(--ink); }
+.passage { font: 1.15rem/1.75 var(--f-mono); max-width: 70ch; color: var(--muted); overflow-wrap: anywhere; margin: 0; }
+.passage .done { color: var(--ink); }
+.passage .cur { background: var(--ink); color: var(--bg); border-radius: 2px; }
+.passage .dbl { background: var(--warn-cap); color: var(--ink); box-shadow: inset 0 -2px 0 var(--warn); }
+.doubles { font: 0.85rem/1.6 var(--f-mono); margin: 0; padding: 0; list-style: none; }
+.doubles li { color: var(--warn); }
+@media (prefers-reduced-motion: reduce) { .key .cap, .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Model M Key Test</h1>
+      <p class="sub">Press every key once. Keys turn green when they register. Amber means the key chattered, sending more than one press for a single tap. Avoid browser shortcuts like Ctrl+W.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Layout">
+        <button id="lay-ansi" type="button" aria-pressed="true">ANSI 101</button>
+        <button id="lay-iso" type="button" aria-pressed="false">ISO 102</button>
+      </div>
+      <button id="copy" type="button">Copy results</button>
+      <button id="reset" type="button">Reset</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="dot" style="background:var(--ok)"></span><b id="s-ok">0</b><span id="s-total">of 101 working</span></div>
+    <div class="stat"><span class="dot" style="background:var(--line)"></span><b id="s-left">101</b><span>not pressed yet</span></div>
+    <div class="stat"><span class="dot" style="background:var(--warn)"></span><b id="s-chat">0</b><span>chattering</span></div>
+    <div class="stat"><span class="dot" style="background:var(--unk)"></span><b id="s-unk">0</b><span>unexpected codes</span></div>
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+  </div>
+
+  <div class="focus-note" id="focus-note" hidden>Click anywhere on this page so it can hear the keyboard.</div>
+
+  <section class="panel typing" aria-label="Typing test">
+    <div class="typing-head">
+      <h2>Typing test</h2>
+      <div class="typing-stats">
+        <span><b id="t-pos">0</b> / <span id="t-len">0</span> typed</span>
+        <span><b id="t-dbl">0</b> doubled</span>
+        <span><b id="t-typo">0</b> wrong keys</span>
+        <span id="t-which">Passage 1 of 3</span>
+        <button id="t-restart" type="button">Restart passage</button>
+        <button id="t-next" type="button">Next passage</button>
+      </div>
+    </div>
+    <p class="passage" id="passage"></p>
+    <ul class="doubles" id="doubles"></ul>
+    <p class="sub" style="margin:0">Type the passage at your normal speed. Don't fix mistakes; a wrong key is just counted and skipped. Every extra letter the keyboard adds is marked in amber, with the time between the two presses.</p>
+  </section>
+
+  <div class="case"><div class="board" id="board" aria-label="Keyboard layout"></div></div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--cap)"></i>Not pressed yet</span>
+    <span><i class="sw" style="background:var(--ok-cap)"></i>Works</span>
+    <span><i class="sw" style="background:var(--warn-cap)"></i>Chatter (double press)</span>
+    <span>The small number on a key counts its presses.</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Last key</h2>
+      <dl class="last">
+        <dt>code</dt><dd id="l-code">-</dd>
+        <dt>key</dt><dd id="l-key">-</dd>
+        <dt>held</dt><dd id="l-held">-</dd>
+      </dl>
+      <h2 style="margin-top:16px">Still to press</h2>
+      <p class="list" id="untested"></p>
+      <h2>Unexpected codes</h2>
+      <p class="list empty" id="unknown">None. A key here sends something that isn't on this layout, which usually means the keymap is wrong.</p>
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+    <div class="panel">
+      <h2>Event log</h2>
+      <ul class="log" id="log"></ul>
+      <h2 style="margin-top:16px">If a key won't register</h2>
+      <ul class="tips">
+        <li>A whole row or column dead at once points to a broken matrix line or connector on the controller board.</li>
+        <li>A single dead key is usually a spring, flipper, or one membrane trace.</li>
+        <li>Print Screen and Pause only report when released, so tap them normally.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const W = 23, H = 6.5;
+  const MODS = new Set(["Escape","Tab","CapsLock","ShiftLeft","ShiftRight","ControlLeft","ControlRight","AltLeft","AltRight","Backspace","Enter","NumpadEnter","PrintScreen","ScrollLock","Pause","Insert","Home","PageUp","Delete","End","PageDown","NumLock"]);
+
+  function build(iso) {
+    const K = [];
+    const k = (code, label, x, y, w = 1, h = 1, extra) => K.push({ code, label, x, y, w, h, extra });
+    const row = (codes, labels, x0, y) => codes.forEach((c, i) => k(c, labels[i], x0 + i, y));
+    // Function row
+    k("Escape", "Esc", 0, 0);
+    [1,2,3,4].forEach((n, i) => k("F" + n, "F" + n, 2 + i, 0));
+    [5,6,7,8].forEach((n, i) => k("F" + n, "F" + n, 6.5 + i, 0));
+    [9,10,11,12].forEach((n, i) => k("F" + n, "F" + n, 11 + i, 0));
+    k("PrintScreen", "Print\nScreen", 15.5, 0); k("ScrollLock", "Scroll\nLock", 16.5, 0); k("Pause", "Pause", 17.5, 0);
+    // Number row
+    row(["Backquote","Digit1","Digit2","Digit3","Digit4","Digit5","Digit6","Digit7","Digit8","Digit9","Digit0","Minus","Equal"],
+        ["~\n`","!\n1","@\n2","#\n3","$\n4","%\n5","^\n6","&\n7","*\n8","(\n9",")\n0","_\n-","+\n="], 0, 1.5);
+    k("Backspace", "←", 13, 1.5, 2);
+    k("Insert", "Insert", 15.5, 1.5); k("Home", "Home", 16.5, 1.5); k("PageUp", "Page\nUp", 17.5, 1.5);
+    k("NumLock", "Num\nLock", 19, 1.5); k("NumpadDivide", "/", 20, 1.5); k("NumpadMultiply", "*", 21, 1.5); k("NumpadSubtract", "-", 22, 1.5);
+    // Q row
+    k("Tab", "Tab", 0, 2.5, 1.5);
+    row(["KeyQ","KeyW","KeyE","KeyR","KeyT","KeyY","KeyU","KeyI","KeyO","KeyP","BracketLeft","BracketRight"],
+        ["Q","W","E","R","T","Y","U","I","O","P","{\n[","}\n]"], 1.5, 2.5);
+    if (iso) k("Enter", "Enter", 13.5, 2.5, 1.5, 2, "iso-enter");
+    else k("Backslash", "|\n\\", 13.5, 2.5, 1.5);
+    k("Delete", "Delete", 15.5, 2.5); k("End", "End", 16.5, 2.5); k("PageDown", "Page\nDown", 17.5, 2.5);
+    k("Numpad7", "7\nHome", 19, 2.5); k("Numpad8", "8\n↑", 20, 2.5); k("Numpad9", "9\nPgUp", 21, 2.5); k("NumpadAdd", "+", 22, 2.5, 1, 2);
+    // A row
+    k("CapsLock", "Caps Lock", 0, 3.5, 1.75);
+    row(["KeyA","KeyS","KeyD","KeyF","KeyG","KeyH","KeyJ","KeyK","KeyL","Semicolon","Quote"],
+        ["A","S","D","F","G","H","J","K","L",":\n;","\"\n'"], 1.75, 3.5);
+    if (iso) k("Backslash", "~\n#", 12.75, 3.5);
+    else k("Enter", "Enter", 12.75, 3.5, 2.25);
+    k("Numpad4", "4\n←", 19, 3.5); k("Numpad5", "5", 20, 3.5); k("Numpad6", "6\n→", 21, 3.5);
+    // Shift row
+    if (iso) { k("ShiftLeft", "Shift", 0, 4.5, 1.25); k("IntlBackslash", "|\n\\", 1.25, 4.5); }
+    else k("ShiftLeft", "Shift", 0, 4.5, 2.25);
+    row(["KeyZ","KeyX","KeyC","KeyV","KeyB","KeyN","KeyM","Comma","Period","Slash"],
+        ["Z","X","C","V","B","N","M","<\n,",">\n.","?\n/"], 2.25, 4.5);
+    k("ShiftRight", "Shift", 12.25, 4.5, 2.75);
+    k("ArrowUp", "↑", 16.5, 4.5);
+    k("Numpad1", "1\nEnd", 19, 4.5); k("Numpad2", "2\n↓", 20, 4.5); k("Numpad3", "3\nPgDn", 21, 4.5); k("NumpadEnter", "Enter", 22, 4.5, 1, 2);
+    // Bottom row
+    k("ControlLeft", "Ctrl", 0, 5.5, 1.5); k("AltLeft", "Alt", 2.5, 5.5, 1.5); k("Space", "", 4, 5.5, 7);
+    k("AltRight", "Alt", 11, 5.5, 1.5); k("ControlRight", "Ctrl", 13.5, 5.5, 1.5);
+    k("ArrowLeft", "←", 15.5, 5.5); k("ArrowDown", "↓", 16.5, 5.5); k("ArrowRight", "→", 17.5, 5.5);
+    k("Numpad0", "0\nIns", 19, 5.5, 2); k("NumpadDecimal", ".\nDel", 21, 5.5);
+    return K;
+  }
+
+  const board = document.getElementById("board");
+  const $ = (id) => document.getElementById(id);
+  let iso = false, keys = [], byCode = new Map();
+  let state = {};           // code -> {count, chatter}
+  let unknown = new Map();  // code -> count
+  const downAt = {}, lastUp = {};
+  let pendingCtrl = null;
+  const CHATTER_MS = 40;
+
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem("mm-keytest") || "null");
+      if (s) { iso = !!s.iso; state = s.state || {}; unknown = new Map(s.unknown || []); }
+    } catch (e) {}
+  }
+  function save() {
+    try { localStorage.setItem("mm-keytest", JSON.stringify({ iso, state, unknown: [...unknown] })); } catch (e) {}
+  }
+
+  function render() {
+    keys = build(iso);
+    byCode = new Map(keys.map((k) => [k.code, k]));
+    board.innerHTML = "";
+    const badge = document.createElement("div");
+    badge.className = "badge"; badge.textContent = iso ? "ISO 102" : "ANSI 101";
+    badge.style.left = (19 / W * 100) + "%"; badge.style.top = (0.3 / H * 100) + "%";
+    board.appendChild(badge);
+    for (const k of keys) {
+      const el = document.createElement("div");
+      el.className = "key" + (MODS.has(k.code) ? " mod" : "") + (k.extra ? " " + k.extra : "");
+      el.style.left = (k.x / W * 100) + "%"; el.style.top = (k.y / H * 100) + "%";
+      el.style.width = (k.w / W * 100) + "%"; el.style.height = (k.h / H * 100) + "%";
+      el.title = k.code;
+      el.innerHTML = '<div class="cap"></div><span class="n"></span>';
+      el.firstChild.textContent = k.label;
+      k.el = el;
+      board.appendChild(el);
+      paint(k.code);
+    }
+    $("lay-ansi").setAttribute("aria-pressed", String(!iso));
+    $("lay-iso").setAttribute("aria-pressed", String(iso));
+    summary();
+  }
+
+  function paint(code) {
+    const k = byCode.get(code); if (!k) return;
+    const s = state[code];
+    k.el.dataset.state = !s ? "untested" : s.chatter ? "chatter" : "ok";
+    k.el.lastChild.textContent = s && s.count > 1 ? s.count : "";
+  }
+
+  function summary() {
+    const total = keys.length;
+    const ok = keys.filter((k) => state[k.code]).length;
+    const chat = keys.filter((k) => state[k.code] && state[k.code].chatter);
+    $("s-ok").textContent = ok;
+    $("s-total").textContent = "of " + total + " working";
+    $("s-left").textContent = total - ok;
+    $("s-chat").textContent = chat.length;
+    $("s-unk").textContent = unknown.size;
+    $("bar").style.width = (ok / total * 100) + "%";
+    const left = keys.filter((k) => !state[k.code]).map(nameOf);
+    const ut = $("untested");
+    ut.textContent = left.length ? left.join("  ") : "All keys registered.";
+    ut.classList.toggle("empty", !left.length);
+    const un = $("unknown");
+    if (unknown.size) { un.textContent = [...unknown].map(([c, n]) => c + " ×" + n).join("  "); un.classList.remove("empty"); }
+    else { un.textContent = "None. A key here sends something that isn't on this layout, which usually means the keymap is wrong."; un.classList.add("empty"); }
+  }
+
+  function nameOf(k) {
+    const l = k.label.split("\n");
+    const num = /^Numpad/.test(k.code);
+    const base = k.code === "Space" ? "Space" : num ? l[0] : (l.length > 1 && l[0].length === 1 ? l[1] : l.join(" "));
+    return num ? "Num" + base : base;
+  }
+
+  function stamp() {
+    const d = new Date();
+    return d.toTimeString().slice(0, 8) + "." + String(d.getMilliseconds()).padStart(3, "0");
+  }
+  function log(code, kind, info, cls) {
+    const li = document.createElement("li");
+    if (cls) li.className = cls;
+    [stamp(), code, kind, info].forEach((t) => { const s = document.createElement("span"); s.textContent = t; li.appendChild(s); });
+    const ul = $("log"); ul.prepend(li);
+    while (ul.children.length > 60) ul.lastChild.remove();
+  }
+
+  function press(code, key, t) {
+    if (!byCode.has(code)) {
+      unknown.set(code || "(blank: " + key + ")", (unknown.get(code) || 0) + 1);
+      log(code || key, "down", "not on layout", "unknown");
+      summary(); save(); return;
+    }
+    const s = state[code] || (state[code] = { count: 0, chatter: false });
+    s.count++;
+    let chattered = false;
+    if (lastUp[code] != null && t - lastUp[code] < CHATTER_MS) { s.chatter = true; chattered = true; }
+    downAt[code] = t;
+    byCode.get(code).el.classList.add("down");
+    log(code, "down", chattered ? "chatter: " + Math.round(t - lastUp[code]) + " ms after release" : "", chattered ? "chatter" : "");
+    paint(code); summary(); save();
+  }
+
+  function release(code, t) {
+    const k = byCode.get(code); if (!k) return;
+    k.el.classList.remove("down");
+    lastUp[code] = t;
+    if (downAt[code] == null) {
+      // Keys like Print Screen only report a release.
+      const s = state[code] || (state[code] = { count: 0, chatter: false });
+      s.count++; paint(code); summary(); save();
+      log(code, "up", "release only");
+      return;
+    }
+    const held = Math.round(t - downAt[code]);
+    $("l-held").textContent = held + " ms";
+    log(code, "up", "held " + held + " ms");
+    delete downAt[code];
+  }
+
+  window.addEventListener("keydown", (e) => {
+    e.preventDefault();
+    if (e.repeat) return;
+    $("l-code").textContent = e.code || "(none)";
+    $("l-key").textContent = e.key === " " ? "Space" : e.key;
+    $("l-held").textContent = "…";
+    const t = performance.now();
+    // Windows sends a fake Left Ctrl just before Right Alt on AltGr layouts; hold it briefly so it can be dropped.
+    if (e.code === "ControlLeft") {
+      pendingCtrl = setTimeout(() => { pendingCtrl = null; press("ControlLeft", e.key, t); }, 15);
+      return;
+    }
+    if (e.code === "AltRight" && pendingCtrl) { clearTimeout(pendingCtrl); pendingCtrl = null; }
+    typing(e, t);
+    press(e.code, e.key, t);
+  }, true);
+
+  // Typing test: compares what arrives with the passage, so a doubled letter is caught however slow the second press is.
+  const PASSAGES = [
+    "On cold mornings the workshop smells of oil, wood and solder. Tom opens the box, lifts out an old Model M and blows the dust from its rows of tall keys. Some of the caps are yellowed and one or two are loose, but the springs still sound strong. He notes which keys go soft or stick, logs each one in a notebook, and puts the board back together slowly. Good tools, a soft brush and a little patience go a long way. By noon the keyboard works again, and the office is loud with its old familiar clatter, row after row and word after word, as if forty years were nothing at all.",
+    "Six foxes and two oxen stood by the old box at the door. It is an odd note to type, yet it holds every word you need to test the o and x keys. Look at how often the o comes up in common words such as soon, room, door, book and wood. Now type a few more: color, motor, tomorrow, follow, hollow, oxford, onion, option, solution, explore, export, extra and next. If any letter doubles by itself, the tester marks it and notes how long after the release the extra press arrived. Do not slow down for this one. Type at your usual pace, look at the screen, and keep going until the very last full stop.",
+  ];
+  let pIdx = 0;
+  let PASSAGE = PASSAGES[0];
+  const PASSAGE_ORIGINAL = "Good old keyboards sound like a storm of small clocks. The Model M was built to work for decades, and most of them still do. Under each cap a coiled spring buckles and a hammer drops onto a membrane, and the controller board notes which row and column closed. After forty years, dust, worn contacts or a tired spring can turn one press into two. So type this slowly and evenly, look at the words, not your hands, and do not stop to fix mistakes. Every extra o or other doubled letter is logged with the time between both presses, so we can tell contact bounce from a spring that rebounds.";
+  PASSAGES.push(PASSAGE_ORIGINAL);
+  function setPassage(i) { pIdx = i % PASSAGES.length; PASSAGE = PASSAGES[pIdx]; $("t-which").textContent = "Passage " + (pIdx + 1) + " of " + PASSAGES.length; resetTyping(); }
+  let tPos = 0, tTypos = 0, tDoubles = [], tMarks = new Set();
+  const tDown = {};
+  function typing(e, t) {
+    if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
+    const prevDown = tDown[e.code];
+    tDown[e.code] = t;
+    if (tPos >= PASSAGE.length) return;
+    const ch = e.key;
+    if (ch === PASSAGE[tPos]) tPos++;
+    else if (tPos > 0 && ch === PASSAGE[tPos - 1] && prevDown != null && t - prevDown < 400) {
+      const gapUp = lastUp[e.code] != null ? Math.round(t - lastUp[e.code]) : null;
+      tDoubles.push({ ch, code: e.code, gapDown: Math.round(t - prevDown), gapUp });
+      tMarks.add(tPos - 1);
+    } else tTypos++;
+    renderPassage();
+  }
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  function renderPassage() {
+    let html = "";
+    for (let i = 0; i < PASSAGE.length; i++) {
+      const cls = [i < tPos ? "done" : "", i === tPos ? "cur" : "", tMarks.has(i) ? "dbl" : ""].filter(Boolean).join(" ");
+      html += cls ? '<span class="' + cls + '">' + esc(PASSAGE[i]) + "</span>" : esc(PASSAGE[i]);
+    }
+    $("passage").innerHTML = html;
+    $("t-pos").textContent = tPos;
+    $("t-len").textContent = PASSAGE.length;
+    $("t-dbl").textContent = tDoubles.length;
+    $("t-typo").textContent = tTypos;
+    $("doubles").innerHTML = tDoubles.map((d) =>
+      "<li>" + esc(d.ch === " " ? "Space" : d.ch) + ": second press " + (d.gapUp != null ? d.gapUp + " ms after release, " : "") + d.gapDown + " ms after the first press</li>"
+    ).join("");
+  }
+  function resetTyping() { tPos = 0; tTypos = 0; tDoubles = []; tMarks = new Set(); renderPassage(); }
+  $("t-restart").addEventListener("click", (e) => { resetTyping(); e.currentTarget.blur(); });
+  $("t-next").addEventListener("click", (e) => { setPassage(pIdx + 1); e.currentTarget.blur(); });
+
+  window.addEventListener("keyup", (e) => {
+    e.preventDefault();
+    release(e.code, performance.now());
+  }, true);
+
+  function focusNote() { $("focus-note").hidden = document.hasFocus(); }
+  window.addEventListener("focus", focusNote);
+  window.addEventListener("blur", () => {
+    focusNote();
+    for (const c of Object.keys(downAt)) { const k = byCode.get(c); if (k) k.el.classList.remove("down"); delete downAt[c]; }
+  });
+  setInterval(focusNote, 1000);
+
+  $("lay-ansi").addEventListener("click", (e) => { iso = false; render(); save(); e.currentTarget.blur(); });
+  $("lay-iso").addEventListener("click", (e) => { iso = true; render(); save(); e.currentTarget.blur(); });
+  $("reset").addEventListener("click", (e) => {
+    state = {}; unknown = new Map(); $("log").innerHTML = "";
+    ["l-code","l-key","l-held"].forEach((id) => $(id).textContent = "-");
+    resetTyping();
+    render(); save(); e.currentTarget.blur(); toast("Cleared. Start pressing keys.");
+  });
+
+  function report() {
+    const left = keys.filter((k) => !state[k.code]).map(nameOf);
+    const chat = keys.filter((k) => state[k.code] && state[k.code].chatter).map(nameOf);
+    const ok = keys.length - left.length;
+    return [
+      "Model M key test (" + (iso ? "ISO 102" : "ANSI 101") + ")",
+      "Working: " + ok + " of " + keys.length,
+      "Not registering (" + left.length + "): " + (left.join(", ") || "none"),
+      "Chattering (" + chat.length + "): " + (chat.join(", ") || "none"),
+      "Unexpected codes: " + ([...unknown.keys()].join(", ") || "none"),
+      "Typing test (passage " + (pIdx + 1) + "): " + tPos + " of " + PASSAGE.length + " characters, " + tTypos + " wrong keys",
+      "Doubled letters (" + tDoubles.length + "): " + (tDoubles.map((d) =>
+        (d.ch === " " ? "Space" : d.ch) + " [" + (d.gapUp != null ? d.gapUp + " ms after release, " : "") + d.gapDown + " ms after press]").join("; ") || "none"),
+    ].join("\n");
+  }
+  $("copy").addEventListener("click", (e) => {
+    const text = report();
+    e.currentTarget.blur();
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand("copy"); } catch (err) {}
+      ta.remove();
+      toast(ok ? "Copied. Paste it into the chat." : "Copy was blocked. Select the 'Still to press' list and copy it by hand.");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => toast("Copied. Paste it into the chat."), fallback);
+    } else fallback();
+  });
+
+  let toastTimer;
+  function toast(msg) { $("toast").textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => $("toast").textContent = "", 4000); }
+
+  load();
+  render();
+  renderPassage();
+  focusNote();
+})();
+</script>
