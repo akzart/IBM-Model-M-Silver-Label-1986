@@ -1,21 +1,39 @@
 # IBM Model M Silver Label (1986)
 
-Custom firmware and test tools for an IBM Model M **1392120** (silver label, 1986), fitted with a **Model H Rmx v2.0 (NilsFC)** controller running [Vial](https://get.vial.today/).
+Custom Vial firmware and test tools for a 1986 silver-label IBM Model M that has been converted to USB with a **Model H Remix 2.0** controller board.
+
+> **Important:** this firmware is only for the **Model H / Model H Remix** controller, which uses an STM32F103. It will **not** work on:
+> - the original IBM controller
+> - a Model X / nice!nano (ZMK) board
+> - any other converter
+>
+> Check which board is inside your keyboard before flashing.
+
+## Hardware
+
+| | |
+|---|---|
+| **Keyboard** | IBM Model M Enhanced Keyboard, part no. **1392120**, silver label, 1986, 101-key ANSI |
+| **Controller PCB** | **Model H Remix 2.0** by [NilsFC](https://github.com/NilsFC/Model-H-Rmx). It replaces the original IBM controller board and is a remix of the open-source [Model H](https://github.com/jberclaz/modelh) design. |
+| **MCU** | STM32F103 |
+| **Connection** | USB only, through the original SDL connector (no Bluetooth) |
+| **USB IDs** | `BDE0:B155` normally, `6B62:0000` in the DFU bootloader |
+| **Firmware base** | [vial-qmk](https://github.com/vial-kb/vial-qmk), target `ibm/model_m/modelh`, commit `dd43959a` |
 
 ## What's changed from stock Vial firmware
 
 | Change | Why |
 |---|---|
 | **Right Alt → Right Windows key** (`KC_RGUI`) | The 1986 layout has no Windows key. |
-| **Debounce 25 ms, `asym_eager_defer_pk`**, applied to every key | The ageing membrane bounced for up to ~17 ms on release, which caused double letters. The key press still registers instantly, so typing doesn't feel slower. |
+| **Debounce 25 ms, `asym_eager_defer_pk`**, applied to every key | The ageing membrane bounced for up to ~17 ms on release, which caused double letters. Presses still register instantly, so typing doesn't feel slower. |
 
-Both settings are stored in the controller, so they work on any computer with no software installed.
+Both settings are stored on the controller, so they work on any computer with no software installed.
 
 ## Repository layout
 
 ```
 firmware/
-  ibm_model_m_modelh_vial_debounce.bin   QMK build output (has a DFU suffix, ID 1eaf:0003)
+  ibm_model_m_modelh_vial_debounce.bin   QMK build output (carries a DFU suffix with ID 1eaf:0003)
   modelh_flash_nosuffix.bin              Same image with the suffix removed: the file that was flashed
 keymap/                                  QMK keymap "vial_debounce" (config.h, rules.mk, keymap.c, vial.json)
 tools/key-test.html                      Browser key tester + typing test that detects chatter / double letters
@@ -36,13 +54,13 @@ SHA-256:
    ```
 5. Replug the keyboard. It comes back as `BDE0:B155`.
 
-> Flashing any other firmware, such as the stock Model H Rmx Vial `.bin`, removes the debounce fix and the Right Alt remap.
+> Flashing any other firmware, such as the stock Model H Remix Vial `.bin`, removes the debounce fix and the Right Alt remap.
 
 **Vial unlock combo:** Esc + Enter + Right Alt (the key that now sends Windows).
 
-## Rebuilding from source
+Flashing firmware is done at your own risk.
 
-Built from [vial-qmk](https://github.com/vial-kb/vial-qmk) at commit `dd43959a`.
+## Rebuilding from source
 
 ```
 cp -r keymap <vial-qmk>/keyboards/ibm/model_m/modelh/keymaps/vial_debounce
@@ -64,6 +82,22 @@ Results from typing passages in `tools/key-test.html`:
 If another key starts doubling, check the key that received O's old spring first.
 In the tester, a double more than ~100 ms after release is usually a real keypress, not chatter.
 
+## Credits
+
+This repository is a small personal configuration built on other people's work:
+
+- **[Model H Remix](https://github.com/NilsFC/Model-H-Rmx)** by [NilsFC](https://github.com/NilsFC): the controller PCB installed in this keyboard.
+- **[Model H](https://github.com/jberclaz/modelh)** by [jberclaz](https://github.com/jberclaz): the original open-source replacement controller that the Remix is based on.
+- **QMK keyboard support for `ibm/model_m/modelh`**: maintained by [John Hawthorn](https://github.com/jhawthorn). The `keymap.c` here is derived from his work (© 2020 John Hawthorn, GPL-2.0-or-later).
+- **[QMK Firmware](https://github.com/qmk/qmk_firmware)** and **[Vial](https://github.com/vial-kb/vial-qmk)**: the firmware framework and the live-remapping fork this build uses (GPL).
+- **[QMK MSYS](https://msys.qmk.fm/)**, **[dfu-util](https://dfu-util.sourceforge.net/)** and **[Zadig](https://zadig.akeo.ie/)** (by Pete Batard / Akeo): build, flashing and driver tools.
+- The key tester page loads the **Archivo** and **JetBrains Mono** fonts from Google Fonts (SIL Open Font License).
+
+My own changes are the debounce settings, the Right Alt remap, the key tester page and this documentation.
+
+IBM and Model M are trademarks of International Business Machines Corporation. This project is not affiliated with or endorsed by IBM, NilsFC, the Model H authors, QMK or Vial.
+
 ## License
 
-The keymap is derived from QMK/Vial and is licensed under GPL-2.0-or-later.
+- **Firmware source and binaries** (`keymap/`, `firmware/`): GPL-2.0-or-later, the same as the QMK/Vial code they are built from. See [LICENSE](LICENSE).
+- **Key tester and documentation** (`tools/`, `README.md`): also released under GPL-2.0-or-later to keep the repository under one license.
